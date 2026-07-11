@@ -11,9 +11,9 @@ import { User, Course, Opportunity, ForumPost, MentorshipSession, Enrollment, Ce
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'herrise-secret-key-for-jwt-tokens';
-const DB_FILE = path.join(process.cwd(), 'db.json');
+const DB_FILE = process.env.DB_FILE_PATH || path.join(process.cwd(), 'db.json');
 
 // Interface for database file schema
 interface AppDatabase {
