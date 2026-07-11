@@ -507,10 +507,7 @@ export default function RegisterLogin({ onLoginSuccess, language }: RegisterLogi
                 </button>
               </div>
 
-              {/* Developer Bypass Advice */}
-              <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 text-[11px] text-slate-600 text-center">
-                <strong>Demo Pilot Bypass:</strong> Log in using <code>admin@herrise.org</code> or <code>mentor1@herrise.org</code> with password <code>Password123</code> to browse pre-seeded admin/mentor dashboards!
-              </div>
+
 
             </div>
           )}
