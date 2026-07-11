@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Hardened Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // --- Collection Rules ---
+
+    // 2. Users Collection
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.id is string && data.id.size() <= 128
+          && data.email is string && data.email.size() <= 128
+          && data.name is string && data.name.size() <= 128
+          && data.role in ['learner', 'mentor', 'admin']
+          && (data.photo == null || (data.photo is string && data.photo.size() <= 512))
+          && (data.bio == null || (data.bio is string && data.bio.size() <= 1024))
+          && (data.country == null || (data.country is string && data.country.size() <= 100))
+          && (data.language == null || data.language in ['en', 'fr']);
+      }
+
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) 
+        && request.resource.data.role in ['learner', 'mentor']; // Forbid self-assigning admin
+        
+      allow update: if isOwner(userId) && isValidUser(request.resource.data)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isVerified', 'isActive', 'createdAt']);
+        
+      allow delete: if isAdmin();
+    }
+
+    // 3. Courses Collection
+    match /courses/{courseId} {
+      function isValidCourse(data) {
+        return data.id is string && data.id.size() <= 128
+          && data.title is string && data.title.size() <= 200
+          && data.titleFr is string && data.titleFr.size() <= 200
+          && data.category in ['digital', 'coding', 'entrepreneurship', 'finance', 'communication']
+          && data.level in ['beginner', 'intermediate', 'advanced']
+          && data.published is bool;
+      }
+
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // 4. Enrollments Collection
+    match /enrollments/{enrollmentId} {
+      function isValidEnrollment(data) {
+        return data.id is string && data.id.size() <= 128
+          && data.userId == request.auth.uid
+          && data.courseId is string && data.courseId.size() <= 128
+          && data.completedLessons is list
+          && data.completedLessons.size() <= 100;
+      }
+
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() && isValidEnrollment(request.resource.data)
+        && request.resource.data.userId == request.auth.uid;
+        
+      allow update: if isSignedIn() && isValidEnrollment(request.resource.data)
+        && resource.data.userId == request.auth.uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['userId', 'courseId', 'enrolledAt']);
+        
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // 5. Mentorship Sessions Collection
+    match /sessions/{sessionId} {
+      function isValidSession(data) {
+        return data.id is string && data.id.size() <= 128
+          && data.learnerId is string && data.learnerId.size() <= 128
+          && data.mentorId is string && data.mentorId.size() <= 128
+          && data.status in ['pending', 'accepted', 'declined', 'completed']
+          && data.goal is string && data.goal.size() <= 2000;
+      }
+
+      allow get: if isSignedIn() && (resource.data.learnerId == request.auth.uid || resource.data.mentorId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.learnerId == request.auth.uid || resource.data.mentorId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() && isValidSession(request.resource.data)
+        && request.resource.data.learnerId == request.auth.uid;
+        
+      allow update: if isSignedIn() && isValidSession(request.resource.data) && (
+        // Learner updates booking details or rating/review
+        (resource.data.learnerId == request.auth.uid && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['learnerId', 'mentorId', 'status', 'createdAt'])) ||
+        // Mentor accepts/declines or edits status
+        (resource.data.mentorId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'videoRoomUrl']))
+      );
+      
+      allow delete: if isAdmin();
+    }
+
+    // 6. Opportunities Collection
+    match /opportunities/{opportunityId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // 7. Forum Posts Collection
+    match /forumPosts/{postId} {
+      function isValidPost(data) {
+        return data.id is string && data.id.size() <= 128
+          && data.authorId == request.auth.uid
+          && data.channel in ['tech', 'business', 'wellbeing']
+          && data.title is string && data.title.size() <= 200
+          && data.content is string && data.content.size() <= 5000;
+      }
+
+      allow read: if isSignedIn();
+      
+      allow create: if isSignedIn() && isValidPost(request.resource.data);
+      
+      allow update: if isSignedIn() && (
+        // Author updates content
+        (resource.data.authorId == request.auth.uid && isValidPost(request.resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['authorId', 'createdAt'])) ||
+        // Anyone reports the post (increases reportsCount)
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportsCount', 'isFlagged']))
+      );
+      
+      allow delete: if isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // 8. Bookmarks Collection
+    match /bookmarks/{bookmarkId} {
+      function isValidBookmark(data) {
+        return data.id is string && data.id.size() <= 128
+          && data.userId == request.auth.uid
+          && data.opportunityId is string && data.opportunityId.size() <= 128;
+      }
+
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() && isValidBookmark(request.resource.data);
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // 9. Certificates Collection
+    match /certificates/{certificateId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}

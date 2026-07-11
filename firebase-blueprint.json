@@ -1,0 +1,182 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile document containing role, background, skills, and preferences.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["learner", "mentor", "admin"] },
+        "photo": { "type": "string", "maxLength": 512 },
+        "bio": { "type": "string", "maxLength": 1024 },
+        "skills": { "type": "array" },
+        "country": { "type": "string", "maxLength": 100 },
+        "language": { "type": "string", "enum": ["en", "fr"] },
+        "isVerified": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "name", "role", "createdAt"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Skills training course catalog resource.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "titleFr": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "descriptionFr": { "type": "string", "maxLength": 2000 },
+        "category": { "type": "string", "enum": ["digital", "coding", "entrepreneurship", "finance", "communication"] },
+        "level": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+        "duration": { "type": "string", "maxLength": 50 },
+        "imageUrl": { "type": "string", "maxLength": 512 },
+        "published": { "type": "boolean" },
+        "enrollmentsCount": { "type": "number" },
+        "completionsCount": { "type": "number" }
+      },
+      "required": ["id", "title", "titleFr", "category", "level", "published"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "A learner's progress and completion state within a course.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "completedLessons": { "type": "array" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "enrolledAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "courseId", "completedLessons", "enrolledAt"]
+    },
+    "MentorshipSession": {
+      "title": "MentorshipSession",
+      "description": "A scheduled individual 1-on-1 virtual mentoring session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "learnerId": { "type": "string", "maxLength": 128 },
+        "learnerName": { "type": "string", "maxLength": 128 },
+        "mentorId": { "type": "string", "maxLength": 128 },
+        "mentorName": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "time": { "type": "string", "pattern": "^\\d{2}:\\d{2}$" },
+        "goal": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined", "completed"] },
+        "videoRoomUrl": { "type": "string", "maxLength": 512 },
+        "rating": { "type": "number" },
+        "review": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "learnerId", "learnerName", "mentorId", "mentorName", "date", "time", "goal", "status", "createdAt"]
+    },
+    "Opportunity": {
+      "title": "Opportunity",
+      "description": "Jobs, internships, and agricultural or business grants listed in the directory.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "titleFr": { "type": "string", "maxLength": 200 },
+        "company": { "type": "string", "maxLength": 200 },
+        "companyLogo": { "type": "string", "maxLength": 512 },
+        "type": { "type": "string", "enum": ["job", "internship", "grant"] },
+        "category": { "type": "string", "maxLength": 100 },
+        "location": { "type": "string", "maxLength": 200 },
+        "country": { "type": "string", "maxLength": 100 },
+        "sector": { "type": "string", "maxLength": 100 },
+        "deadline": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "description": { "type": "string", "maxLength": 5000 },
+        "descriptionFr": { "type": "string", "maxLength": 5000 },
+        "applyLink": { "type": "string", "maxLength": 512 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "titleFr", "company", "type", "category", "location", "country", "deadline", "description", "applyLink", "createdAt"]
+    },
+    "ForumPost": {
+      "title": "ForumPost",
+      "description": "A discussion board thread started by a member of the network.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "authorId": { "type": "string", "maxLength": 128 },
+        "authorName": { "type": "string", "maxLength": 128 },
+        "authorRole": { "type": "string", "enum": ["learner", "mentor", "admin"] },
+        "authorPhoto": { "type": "string", "maxLength": 512 },
+        "channel": { "type": "string", "enum": ["tech", "business", "wellbeing"] },
+        "title": { "type": "string", "maxLength": 200 },
+        "content": { "type": "string", "maxLength": 5000 },
+        "reportsCount": { "type": "number" },
+        "isFlagged": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "authorId", "authorName", "authorRole", "channel", "title", "content", "createdAt"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "A learner's saved job or grant opportunity.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "opportunityId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "opportunityId", "createdAt"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Digital verifiable graduation diploma generated on course completion.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userName": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "courseTitle": { "type": "string", "maxLength": 200 },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "hash": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "userId", "userName", "courseId", "courseTitle", "issuedAt", "hash"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Collection of individual user profile and membership settings."
+    },
+    "courses/{courseId}": {
+      "schema": "Course",
+      "description": "Main collection of self-paced skills modules and curriculums."
+    },
+    "enrollments/{enrollmentId}": {
+      "schema": "Enrollment",
+      "description": "Main collection of enrollment progress indices, lesson checkboxes, and scores."
+    },
+    "sessions/{sessionId}": {
+      "schema": "MentorshipSession",
+      "description": "Individual virtual video coaching appointments."
+    },
+    "opportunities/{opportunityId}": {
+      "schema": "Opportunity",
+      "description": "Job board listings, funding grants, internships, and work placements."
+    },
+    "forumPosts/{postId}": {
+      "schema": "ForumPost",
+      "description": "Peer support forums organized into thematic learning channels."
+    },
+    "bookmarks/{bookmarkId}": {
+      "schema": "Bookmark",
+      "description": "Personal career bookmarks."
+    },
+    "certificates/{certificateId}": {
+      "schema": "Certificate",
+      "description": "Official pilot graduation digital credentials verified using a hash."
+    }
+  }
+}

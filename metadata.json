@@ -1,0 +1,6 @@
+{
+  "name": "HerRise",
+  "description": "A comprehensive skills training, mentorship, and opportunity platform for women in Africa, designed with low-bandwidth optimization and offline access.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
