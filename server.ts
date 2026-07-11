@@ -8,10 +8,7 @@ import { createServer as createViteServer } from 'vite';
 import { getMockUsers, mockCourses, mockOpportunities, mockForumPosts } from './src/data.ts';
 import { User, Course, Opportunity, ForumPost, MentorshipSession, Enrollment, Certificate, Bookmark, UserRole } from './src/types.ts';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'herrise-secret-key-for-jwt-tokens';
 const DB_FILE = process.env.DB_FILE_PATH || path.join(process.cwd(), 'db.json');
 
